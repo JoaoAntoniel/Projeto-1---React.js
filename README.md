@@ -20,7 +20,8 @@ SPA em React que mostra partidas do cenário competitivo de Valorant (próximas,
    ```
 
 ## Equipe e responsabilidades
-- João Vitor Antoniel — estrutura inicial, listagem de partidas
+- **João Vitor Antoniel** — estrutura inicial, listagem de partidas, busca e filtro (useMemo), favoritos (useReducer), acabamento visual
+- **Gabriel de Peder** — aba de times, janela de detalhes da partida, tratamento de erros/carregamento, README final
 
 ## Uso de ferramentas de apoio
 - Claude Code (IA) ajudou na estrutura inicial do projeto e nos componentes.
