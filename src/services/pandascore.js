@@ -16,3 +16,19 @@ async function get(caminho, params = {}) {
 export function listarPartidas(tipo = 'upcoming', porPagina = 30) {
   return get(`/matches/${tipo}`, { per_page: porPagina })
 }
+
+export async function listarTimes(porPagina = 100) {
+  const times = []
+  let pagina = 1
+  let resultado
+
+  do {
+    resultado = await get('/teams', { per_page: porPagina, page: pagina })
+    if (!Array.isArray(resultado)) return []
+
+    times.push(...resultado)
+    pagina += 1
+  } while (resultado.length === porPagina)
+
+  return times
+}
