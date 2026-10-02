@@ -79,6 +79,7 @@ export default function TimesTab() {
   const [temMais, setTemMais] = useState(true)
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState(null)
+  const [tentativa, setTentativa] = useState(0)
 
   useEffect(() => {
     let ativo = true
@@ -100,7 +101,7 @@ export default function TimesTab() {
     return () => {
       ativo = false
     }
-  }, [pagina])
+  }, [pagina, tentativa])
 
   function carregarMais() {
     setCarregando(true)
@@ -108,15 +109,31 @@ export default function TimesTab() {
     setPagina((p) => p + 1)
   }
 
+  function tentarNovamente() {
+    setCarregando(true)
+    setErro(null)
+    setTentativa((atual) => atual + 1)
+  }
+
   if (carregando && times.length === 0) {
     return (
-      <Box role="status" aria-label="Carregando times" sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+      <Stack role="status" aria-label="Carregando times" alignItems="center" spacing={1.5} sx={{ py: 6 }}>
         <CircularProgress />
-      </Box>
+        <Typography color="text.secondary">Carregando times...</Typography>
+      </Stack>
     )
   }
 
-  if (erro && times.length === 0) return <Alert severity="error">{erro}</Alert>
+  if (erro && times.length === 0) {
+    return (
+      <Alert
+        severity="error"
+        action={<Button color="inherit" size="small" onClick={tentarNovamente}>Tentar novamente</Button>}
+      >
+        {erro}
+      </Alert>
+    )
+  }
   if (times.length === 0) return <Alert severity="info">Nenhum time encontrado.</Alert>
 
   return (
@@ -129,9 +146,17 @@ export default function TimesTab() {
         ))}
       </Grid>
 
-      {erro && <Alert severity="error" sx={{ mt: 2 }}>{erro}</Alert>}
+      {erro && (
+        <Alert
+          severity="error"
+          sx={{ mt: 2 }}
+          action={<Button color="inherit" size="small" onClick={tentarNovamente}>Tentar novamente</Button>}
+        >
+          {erro}
+        </Alert>
+      )}
 
-      {temMais && (
+      {temMais && !erro && (
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
           <Button variant="contained" onClick={carregarMais} disabled={carregando}>
             {carregando ? 'Carregando...' : 'Carregar mais'}

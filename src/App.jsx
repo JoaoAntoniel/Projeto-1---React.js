@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Alert, AppBar, Box, CircularProgress, Container, Grid, Tab, Tabs, Toolbar, Typography } from '@mui/material'
+import { Alert, AppBar, Button, CircularProgress, Container, Grid, Stack, Tab, Tabs, Toolbar, Typography } from '@mui/material'
 import Filtros from './components/Filtros'
 import PartidaCard from './components/PartidaCard'
 import TimesTab from './components/TimesTab'
@@ -11,6 +11,7 @@ export default function App() {
   const [partidas, setPartidas] = useState([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState(null)
+  const [tentativa, setTentativa] = useState(0)
   const [busca, setBusca] = useState('')
   const [campeonato, setCampeonato] = useState('')
 
@@ -20,13 +21,12 @@ export default function App() {
     let ativo = true
     setCarregando(true)
     setErro(null)
-    setCampeonato('')
     listarPartidas(tipo)
       .then((resultado) => {
         if (ativo) setPartidas(Array.isArray(resultado) ? resultado : [])
       })
       .catch((e) => {
-        if (ativo) setErro(e.message)
+        if (ativo) setErro(e.message || 'Não foi possível carregar as partidas.')
       })
       .finally(() => {
         if (ativo) setCarregando(false)
@@ -35,7 +35,7 @@ export default function App() {
     return () => {
       ativo = false
     }
-  }, [aba, tipo])
+  }, [aba, tipo, tentativa])
 
   // Lista de campeonatos sem repetição, recalculada só quando as partidas mudam
   const campeonatos = useMemo(
@@ -75,32 +75,46 @@ export default function App() {
       <Container sx={{ py: 3 }}>
         {aba === 'times' ? <TimesTab /> : (
           <>
-            {carregando && (
-              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+            {carregando ? (
+              <Stack role="status" aria-label="Carregando partidas" alignItems="center" spacing={1.5} sx={{ py: 6 }}>
                 <CircularProgress />
-              </Box>
-            )}
-            {erro && <Alert severity="error">{erro}</Alert>}
-            <Filtros
-              busca={busca}
-              onBusca={setBusca}
-              campeonato={campeonato}
-              onCampeonato={setCampeonato}
-              campeonatos={campeonatos}
-            />
+                <Typography color="text.secondary">Carregando partidas...</Typography>
+              </Stack>
+            ) : erro ? (
+              <Alert
+                severity="error"
+                action={(
+                  <Button color="inherit" size="small" onClick={() => setTentativa((atual) => atual + 1)}>
+                    Tentar novamente
+                  </Button>
+                )}
+              >
+                {erro}
+              </Alert>
+            ) : (
+              <>
+                <Filtros
+                  busca={busca}
+                  onBusca={setBusca}
+                  campeonato={campeonato}
+                  onCampeonato={setCampeonato}
+                  campeonatos={campeonatos}
+                />
 
-            {!carregando && !erro && partidasFiltradas.length === 0 && (
-              <Alert severity="info">Nenhuma partida encontrada.</Alert>
-            )}
+                {partidasFiltradas.length === 0 && (
+                  <Alert severity="info">Nenhuma partida encontrada.</Alert>
+                )}
 
-            {!carregando && !erro && (
-              <Grid container spacing={2}>
-                {partidasFiltradas.map((p) => (
-                  <Grid key={p.id} size={{ xs: 12, sm: 6, md: 4 }}>
-                    <PartidaCard partida={p} />
+                {partidasFiltradas.length > 0 && (
+                  <Grid container spacing={2}>
+                    {partidasFiltradas.map((p) => (
+                      <Grid key={p.id} size={{ xs: 12, sm: 6, md: 4 }}>
+                        <PartidaCard partida={p} />
+                      </Grid>
+                    ))}
                   </Grid>
-                ))}
-              </Grid>
+                )}
+              </>
             )}
           </>
         )}
