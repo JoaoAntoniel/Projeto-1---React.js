@@ -1,4 +1,6 @@
-import { Avatar, Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material'
+import { useState } from 'react'
+import { Avatar, Box, Card, CardActionArea, CardContent, Chip, Stack, Typography } from '@mui/material'
+import PartidaDialog from './PartidaDialog'
 
 function Time({ time, placar }) {
   return (
@@ -15,13 +17,21 @@ function Time({ time, placar }) {
 }
 
 export default function PartidaCard({ partida }) {
+  const [detalhesAbertos, setDetalhesAbertos] = useState(false)
   const [a, b] = partida.opponents.map((o) => o.opponent)
   const placar = (time) => partida.results?.find((r) => r.team_id === time?.id)?.score
   const mostrarPlacar = partida.status !== 'not_started'
   const data = partida.begin_at ?? partida.scheduled_at
 
   return (
+    <>
     <Card sx={{ height: '100%' }}>
+      <CardActionArea
+        onClick={() => setDetalhesAbertos(true)}
+        aria-label={`Ver detalhes da partida entre ${a?.name ?? 'time a definir'} e ${b?.name ?? 'time a definir'}`}
+        aria-haspopup="dialog"
+        sx={{ height: '100%' }}
+      >
       <CardContent>
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
           <Typography variant="caption" color="text.secondary" noWrap>
@@ -41,8 +51,14 @@ export default function PartidaCard({ partida }) {
             {data ? new Date(data).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'Data a definir'}
             {partida.number_of_games ? ` · MD${partida.number_of_games}` : ''}
           </Typography>
+          <Typography variant="caption" display="block" color="primary.main" sx={{ mt: 1 }}>
+            Ver detalhes da partida
+          </Typography>
         </Box>
       </CardContent>
+      </CardActionArea>
     </Card>
+    <PartidaDialog partida={partida} open={detalhesAbertos} onClose={() => setDetalhesAbertos(false)} />
+    </>
   )
 }
