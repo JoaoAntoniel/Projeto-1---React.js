@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Alert, Avatar, Box, Card, CardContent, CircularProgress, Grid, Stack, Typography } from '@mui/material'
+import { Alert, Avatar, Box, Button, Card, CardContent, CircularProgress, Grid, Stack, Typography } from '@mui/material'
 import { listarTimes } from '../services/pandascore'
 
 function Jogador({ jogador }) {
@@ -71,17 +71,24 @@ function TimeCard({ time }) {
   )
 }
 
+const POR_PAGINA = 30
+
 export default function TimesTab() {
   const [times, setTimes] = useState([])
+  const [pagina, setPagina] = useState(1)
+  const [temMais, setTemMais] = useState(true)
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState(null)
 
   useEffect(() => {
     let ativo = true
 
-    listarTimes()
+    listarTimes(pagina, POR_PAGINA)
       .then((resultado) => {
-        if (ativo) setTimes(Array.isArray(resultado) ? resultado : [])
+        if (!ativo) return
+        const novos = Array.isArray(resultado) ? resultado : []
+        setTimes((anteriores) => (pagina === 1 ? novos : [...anteriores, ...novos]))
+        setTemMais(novos.length === POR_PAGINA)
       })
       .catch((error) => {
         if (ativo) setErro(error.message || 'Não foi possível carregar os times.')
@@ -93,9 +100,15 @@ export default function TimesTab() {
     return () => {
       ativo = false
     }
-  }, [])
+  }, [pagina])
 
-  if (carregando) {
+  function carregarMais() {
+    setCarregando(true)
+    setErro(null)
+    setPagina((p) => p + 1)
+  }
+
+  if (carregando && times.length === 0) {
     return (
       <Box role="status" aria-label="Carregando times" sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
         <CircularProgress />
@@ -103,16 +116,28 @@ export default function TimesTab() {
     )
   }
 
-  if (erro) return <Alert severity="error">{erro}</Alert>
+  if (erro && times.length === 0) return <Alert severity="error">{erro}</Alert>
   if (times.length === 0) return <Alert severity="info">Nenhum time encontrado.</Alert>
 
   return (
-    <Grid container spacing={2}>
-      {times.map((time) => (
-        <Grid key={time.id ?? time.slug ?? time.name} size={{ xs: 12, sm: 6, md: 4 }}>
-          <TimeCard time={time} />
-        </Grid>
-      ))}
-    </Grid>
+    <>
+      <Grid container spacing={2}>
+        {times.map((time) => (
+          <Grid key={time.id ?? time.slug ?? time.name} size={{ xs: 12, sm: 6, md: 4 }}>
+            <TimeCard time={time} />
+          </Grid>
+        ))}
+      </Grid>
+
+      {erro && <Alert severity="error" sx={{ mt: 2 }}>{erro}</Alert>}
+
+      {temMais && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+          <Button variant="contained" onClick={carregarMais} disabled={carregando}>
+            {carregando ? 'Carregando...' : 'Carregar mais'}
+          </Button>
+        </Box>
+      )}
+    </>
   )
 }
