@@ -21,18 +21,7 @@ export function listarPartidas(tipo = "upcoming", porPagina = 30) {
   return get(`/matches/${tipo}`, { per_page: porPagina });
 }
 
-export async function listarTimes(porPagina = 30) {
-  const times = [];
-  let pagina = 1;
-  let resultado;
-
-  do {
-    resultado = await get("/teams", { per_page: porPagina, page: pagina });
-    if (!Array.isArray(resultado)) return [];
-
-    times.push(...resultado);
-    pagina += 1;
-  } while (resultado.length === porPagina);
-
-  return times;
+// Busca uma página de times por vez, para não estourar o limite de chamadas da API
+export function listarTimes(pagina = 1, porPagina = 30) {
+  return get("/teams", { per_page: porPagina, page: pagina });
 }
