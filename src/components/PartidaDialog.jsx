@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
 import {
   Alert,
-  CircularProgress,
+  Button,
+  Chip,
   Dialog,
   DialogContent,
   DialogTitle,
@@ -12,44 +12,29 @@ import {
   Stack,
   Typography,
 } from '@mui/material'
-import { listarJogosDaPartida } from '../services/pandascore'
 
-function nomeDoMapa(jogo) {
-  if (typeof jogo.map === 'string') return jogo.map
-  return jogo.map?.name || jogo.map_name || 'Mapa não informado'
+const IDIOMAS = { pt: 'Português', en: 'Inglês', es: 'Espanhol', fr: 'Francês', ko: 'Coreano', ja: 'Japonês', zh: 'Chinês', tr: 'Turco', ru: 'Russo' }
+
+function formatarDuracao(segundos) {
+  if (!segundos) return null
+  const minutos = Math.floor(segundos / 60)
+  return `${minutos} min`
+}
+
+// Transmissões em português primeiro, depois a principal, depois o resto
+function ordenarTransmissoes(streams) {
+  const peso = (s) => (s.language === 'pt' ? 0 : s.main ? 1 : 2)
+  return [...streams].filter((s) => s.raw_url).sort((a, b) => peso(a) - peso(b))
 }
 
 export default function PartidaDialog({ partida, open, onClose }) {
-  const [jogos, setJogos] = useState([])
-  const [carregando, setCarregando] = useState(false)
-  const [erro, setErro] = useState(null)
-
-  useEffect(() => {
-    if (!open || !partida?.id) return undefined
-
-    let ativo = true
-    setCarregando(true)
-    setErro(null)
-    setJogos([])
-
-    listarJogosDaPartida(partida.id)
-      .then((resultado) => {
-        if (ativo) setJogos(Array.isArray(resultado) ? resultado : [])
-      })
-      .catch((error) => {
-        if (ativo) setErro(error.message || 'Não foi possível carregar os jogos desta partida.')
-      })
-      .finally(() => {
-        if (ativo) setCarregando(false)
-      })
-
-    return () => {
-      ativo = false
-    }
-  }, [open, partida?.id])
-
-  const times = (partida?.opponents || []).map((item) => item.opponent?.name).filter(Boolean)
-  const confronto = times.length ? times.join(' vs ') : 'Partida'
+  // Tudo vem no próprio objeto da partida: o endpoint /games é pago na PandaScore
+  const jogos = partida?.games ?? []
+  const transmissoes = ordenarTransmissoes(partida?.streams_list ?? [])
+  const times = (partida?.opponents ?? []).map((item) => item.opponent).filter(Boolean)
+  const nomeDoTime = (id) => times.find((t) => t.id === id)?.name ?? 'Time não informado'
+  const confronto = times.length ? times.map((t) => t.name).join(' vs ') : 'Partida'
+  const encerrada = partida?.status === 'finished'
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" aria-labelledby="partida-dialog-title">
@@ -66,25 +51,51 @@ export default function PartidaDialog({ partida, open, onClose }) {
 
         <Divider />
         <Typography variant="h6" component="h2" sx={{ mt: 2 }}>
-          Jogos e mapas
+          Assistir
         </Typography>
-
-        {carregando && (
-          <Stack role="status" aria-label="Carregando jogos" alignItems="center" sx={{ py: 4 }}>
-            <CircularProgress size={28} />
+        {transmissoes.length === 0 ? (
+          <Alert severity="info" sx={{ mt: 1 }}>Nenhuma transmissão informada para esta partida.</Alert>
+        ) : (
+          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mt: 1, mb: 2 }}>
+            {transmissoes.map((s) => (
+              <Button
+                key={s.raw_url}
+                variant={s.language === 'pt' ? 'contained' : 'outlined'}
+                href={s.raw_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                size="small"
+                sx={s.language === 'pt' ? { bgcolor: '#ff4655' } : undefined}
+              >
+                {encerrada ? 'Rever' : 'Assistir'} · {IDIOMAS[s.language] ?? s.language?.toUpperCase() ?? 'Transmissão'}
+              </Button>
+            ))}
           </Stack>
         )}
-        {erro && <Alert severity="error" sx={{ mt: 2 }}>{erro}</Alert>}
-        {!carregando && !erro && jogos.length === 0 && (
-          <Alert severity="info" sx={{ mt: 2 }}>Ainda não há jogos ou mapas registrados nesta partida.</Alert>
-        )}
-        {!carregando && !erro && jogos.length > 0 && (
+
+        <Divider />
+        <Typography variant="h6" component="h2" sx={{ mt: 2 }}>
+          Mapas da série
+        </Typography>
+        {jogos.length === 0 ? (
+          <Alert severity="info" sx={{ mt: 1 }}>Ainda não há mapas registrados nesta partida.</Alert>
+        ) : (
           <List disablePadding>
             {jogos.map((jogo, index) => (
-              <ListItem key={jogo.id ?? jogo.position ?? index} divider>
+              <ListItem
+                key={jogo.id ?? index}
+                divider
+                secondaryAction={
+                  jogo.status === 'running' ? <Chip label="AO VIVO" color="error" size="small" /> : null
+                }
+              >
                 <ListItemText
-                  primary={`Jogo ${jogo.position ?? index + 1}`}
-                  secondary={nomeDoMapa(jogo)}
+                  primary={`Mapa ${jogo.position ?? index + 1}`}
+                  secondary={
+                    jogo.winner?.id
+                      ? [`Vencedor: ${nomeDoTime(jogo.winner.id)}`, formatarDuracao(jogo.length)].filter(Boolean).join(' · ')
+                      : jogo.status === 'running' ? 'Em andamento' : 'Ainda não jogado'
+                  }
                 />
               </ListItem>
             ))}
