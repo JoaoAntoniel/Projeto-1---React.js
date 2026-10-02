@@ -4,7 +4,7 @@ SPA em React que mostra partidas do cenário competitivo de Valorant (próximas,
 
 ## Requisitos do projeto
 - **API JSON:** PandaScore (Valorant)
-- **Hook/recurso do React:** useReducer e useMemo — *em desenvolvimento*
+- **Hook/recurso do React:** useReducer (times favoritos, em `src/context/FavoritosContext.jsx`) e useMemo (busca e filtros de partidas)
 - **Biblioteca externa:** Material UI (MUI)
 
 ## Como rodar
