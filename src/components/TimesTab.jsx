@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Alert, Avatar, Box, Button, Card, CardContent, CircularProgress, Grid, Stack, Typography } from '@mui/material'
 import { listarTimes } from '../services/pandascore'
+import Filtros from './Filtros'
 
 function Jogador({ jogador }) {
   const nome = jogador?.name || jogador?.slug || 'Jogador sem nome'
@@ -80,11 +81,28 @@ export default function TimesTab() {
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState(null)
   const [tentativa, setTentativa] = useState(0)
+  const [busca, setBusca] = useState('')
+  const [termo, setTermo] = useState('')
+
+  // Espera o usuário parar de digitar por 500 ms antes de buscar na API,
+  // para não fazer uma chamada a cada letra (e não tomar erro 429)
+  useEffect(() => {
+    const espera = setTimeout(() => {
+      const novoTermo = busca.trim()
+      if (novoTermo === termo) return
+      setCarregando(true)
+      setErro(null)
+      setTimes([])
+      setPagina(1)
+      setTermo(novoTermo)
+    }, 500)
+    return () => clearTimeout(espera)
+  }, [busca, termo])
 
   useEffect(() => {
     let ativo = true
 
-    listarTimes(pagina, POR_PAGINA)
+    listarTimes(pagina, POR_PAGINA, termo)
       .then((resultado) => {
         if (!ativo) return
         const novos = Array.isArray(resultado) ? resultado : []
@@ -101,7 +119,7 @@ export default function TimesTab() {
     return () => {
       ativo = false
     }
-  }, [pagina, tentativa])
+  }, [pagina, termo, tentativa])
 
   function carregarMais() {
     setCarregando(true)
@@ -115,29 +133,45 @@ export default function TimesTab() {
     setTentativa((atual) => atual + 1)
   }
 
+  const filtros = <Filtros busca={busca} onBusca={setBusca} rotuloBusca="Buscar time pelo nome" />
+
   if (carregando && times.length === 0) {
     return (
-      <Stack role="status" aria-label="Carregando times" alignItems="center" spacing={1.5} sx={{ py: 6 }}>
+      <>
+        {filtros}
+        <Stack role="status" aria-label="Carregando times" alignItems="center" spacing={1.5} sx={{ py: 6 }}>
         <CircularProgress />
         <Typography color="text.secondary">Carregando times...</Typography>
-      </Stack>
+        </Stack>
+      </>
     )
   }
 
   if (erro && times.length === 0) {
     return (
-      <Alert
-        severity="error"
-        action={<Button color="inherit" size="small" onClick={tentarNovamente}>Tentar novamente</Button>}
-      >
-        {erro}
-      </Alert>
+      <>
+        {filtros}
+        <Alert
+          severity="error"
+          action={<Button color="inherit" size="small" onClick={tentarNovamente}>Tentar novamente</Button>}
+        >
+          {erro}
+        </Alert>
+      </>
     )
   }
-  if (times.length === 0) return <Alert severity="info">Nenhum time encontrado.</Alert>
+  if (times.length === 0) {
+    return (
+      <>
+        {filtros}
+        <Alert severity="info">Nenhum time encontrado.</Alert>
+      </>
+    )
+  }
 
   return (
     <>
+      {filtros}
       <Grid container spacing={2}>
         {times.map((time) => (
           <Grid key={time.id ?? time.slug ?? time.name} size={{ xs: 12, sm: 6, md: 4 }}>
