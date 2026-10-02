@@ -21,6 +21,10 @@ export function listarPartidas(tipo = "upcoming", porPagina = 30) {
   return get(`/matches/${tipo}`, { per_page: porPagina });
 }
 
+export function listarJogosDaPartida(partidaId) {
+  return get(`/matches/${partidaId}/games`, { per_page: 100 });
+}
+
 // Busca uma página de times por vez, para não estourar o limite de chamadas da API
 export function listarTimes(pagina = 1, porPagina = 30) {
   return get("/teams", { per_page: porPagina, page: pagina });
