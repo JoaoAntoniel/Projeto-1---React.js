@@ -43,6 +43,9 @@ export function listarJogosDaPartida(partidaId) {
 }
 
 // Busca uma página de times por vez, para não estourar o limite de chamadas da API
-export function listarTimes(pagina = 1, porPagina = 30) {
-  return get("/teams", { per_page: porPagina, page: pagina });
+// `nome` (opcional) filtra os times pelo nome direto na API
+export function listarTimes(pagina = 1, porPagina = 30, nome = "") {
+  const params = { per_page: porPagina, page: pagina };
+  if (nome) params["search[name]"] = nome;
+  return get("/teams", params);
 }
