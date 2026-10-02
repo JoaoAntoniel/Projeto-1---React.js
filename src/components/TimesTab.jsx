@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Alert, Avatar, Box, Button, Card, CardContent, CircularProgress, Grid, Stack, Typography } from '@mui/material'
+import { Alert, Avatar, Box, Button, Card, CardContent, CircularProgress, FormControlLabel, Grid, Stack, Switch, Typography } from '@mui/material'
 import { listarTimes } from '../services/pandascore'
 import Filtros from './Filtros'
+import BotaoFavorito from './BotaoFavorito'
+import { useFavoritos } from '../context/FavoritosContext'
 
 function Jogador({ jogador }) {
   const nome = jogador?.name || jogador?.slug || 'Jogador sem nome'
@@ -41,7 +43,7 @@ function TimeCard({ time }) {
           >
             {time.acronym?.[0] || time.name?.[0] || '?'}
           </Avatar>
-          <Box sx={{ minWidth: 0 }}>
+          <Box sx={{ minWidth: 0, flex: 1 }}>
             <Typography variant="h6" component="h2" noWrap>
               {time.name || 'Time sem nome'}
             </Typography>
@@ -51,6 +53,7 @@ function TimeCard({ time }) {
               </Typography>
             )}
           </Box>
+          <BotaoFavorito time={time} />
         </Stack>
 
         <Typography variant="subtitle2" sx={{ mb: 1 }}>
@@ -74,7 +77,35 @@ function TimeCard({ time }) {
 
 const POR_PAGINA = 30
 
+// Mostra só os times favoritos, direto do estado (sem chamar a API)
+function ListaFavoritos({ filtros }) {
+  const { favoritos, limpar } = useFavoritos()
+
+  return (
+    <>
+      {filtros}
+      {favoritos.length === 0 ? (
+        <Alert severity="info">Você ainda não favoritou nenhum time. Clique na ☆ de um time para adicionar.</Alert>
+      ) : (
+        <>
+          <Grid container spacing={2}>
+            {favoritos.map((time) => (
+              <Grid key={time.id} size={{ xs: 12, sm: 6, md: 4 }}>
+                <TimeCard time={time} />
+              </Grid>
+            ))}
+          </Grid>
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+            <Button color="error" onClick={limpar}>Limpar favoritos</Button>
+          </Box>
+        </>
+      )}
+    </>
+  )
+}
+
 export default function TimesTab() {
+  const [soFavoritos, setSoFavoritos] = useState(false)
   const [times, setTimes] = useState([])
   const [pagina, setPagina] = useState(1)
   const [temMais, setTemMais] = useState(true)
@@ -133,7 +164,18 @@ export default function TimesTab() {
     setTentativa((atual) => atual + 1)
   }
 
-  const filtros = <Filtros busca={busca} onBusca={setBusca} rotuloBusca="Buscar time pelo nome" />
+  const filtros = (
+    <>
+      <FormControlLabel
+        control={<Switch checked={soFavoritos} onChange={(e) => setSoFavoritos(e.target.checked)} />}
+        label="Só favoritos"
+        sx={{ mb: 1 }}
+      />
+      {!soFavoritos && <Filtros busca={busca} onBusca={setBusca} rotuloBusca="Buscar time pelo nome" />}
+    </>
+  )
+
+  if (soFavoritos) return <ListaFavoritos filtros={filtros} />
 
   if (carregando && times.length === 0) {
     return (

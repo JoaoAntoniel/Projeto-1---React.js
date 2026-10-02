@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Alert, AppBar, Button, CircularProgress, Container, Grid, Stack, Tab, Tabs, Toolbar, Typography } from '@mui/material'
+import { Alert, AppBar, Button, CircularProgress, Container, FormControlLabel, Grid, Stack, Switch, Tab, Tabs, Toolbar, Typography } from '@mui/material'
 import Filtros from './components/Filtros'
 import PartidaCard from './components/PartidaCard'
 import TimesTab from './components/TimesTab'
 import { listarPartidas } from './services/pandascore'
+import { useFavoritos } from './context/FavoritosContext'
 
 export default function App() {
   const [aba, setAba] = useState('partidas')
@@ -14,6 +15,8 @@ export default function App() {
   const [tentativa, setTentativa] = useState(0)
   const [busca, setBusca] = useState('')
   const [campeonato, setCampeonato] = useState('')
+  const [soFavoritos, setSoFavoritos] = useState(false)
+  const { favoritos } = useFavoritos()
 
   useEffect(() => {
     if (aba !== 'partidas') return undefined
@@ -43,15 +46,18 @@ export default function App() {
     [partidas],
   )
 
-  // Partidas filtradas, recalculadas só quando partidas, busca ou campeonato mudam
+  // Partidas filtradas, recalculadas só quando partidas, busca, campeonato ou favoritos mudam
   const partidasFiltradas = useMemo(() => {
     const termo = busca.trim().toLowerCase()
+    const idsFavoritos = new Set(favoritos.map((t) => t.id))
     return partidas.filter((p) => {
+      const times = (p.opponents ?? []).map((o) => o.opponent)
       const doCampeonato = !campeonato || p.league?.name === campeonato
-      const temTime = !termo || (p.opponents ?? []).some((o) => o.opponent?.name?.toLowerCase().includes(termo))
-      return doCampeonato && temTime
+      const temTime = !termo || times.some((t) => t?.name?.toLowerCase().includes(termo))
+      const temFavorito = !soFavoritos || times.some((t) => idsFavoritos.has(t?.id))
+      return doCampeonato && temTime && temFavorito
     })
-  }, [partidas, busca, campeonato])
+  }, [partidas, busca, campeonato, soFavoritos, favoritos])
 
   return (
     <>
@@ -99,6 +105,11 @@ export default function App() {
                   campeonato={campeonato}
                   onCampeonato={setCampeonato}
                   campeonatos={campeonatos}
+                />
+                <FormControlLabel
+                  control={<Switch checked={soFavoritos} onChange={(e) => setSoFavoritos(e.target.checked)} />}
+                  label="Só partidas dos meus times favoritos"
+                  sx={{ mt: -1, mb: 2 }}
                 />
 
                 {partidasFiltradas.length === 0 && (
