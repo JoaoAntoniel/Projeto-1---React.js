@@ -8,11 +8,28 @@ async function get(caminho, params = {}) {
     );
 
   const query = new URLSearchParams(params).toString();
-  const resposta = await fetch(`${BASE_URL}${caminho}?${query}`, {
-    headers: { Authorization: `Bearer ${TOKEN}` },
-  });
-  if (!resposta.ok)
-    throw new Error(`Erro ${resposta.status} ao buscar dados da PandaScore`);
+  let resposta;
+  try {
+    resposta = await fetch(`${BASE_URL}${caminho}?${query}`, {
+      headers: { Authorization: `Bearer ${TOKEN}` },
+    });
+  } catch {
+    throw new Error(
+      "Não foi possível conectar à PandaScore. Verifique sua conexão e tente novamente.",
+    );
+  }
+
+  if (!resposta.ok) {
+    const mensagens = {
+      401: "A PandaScore não aceitou o token configurado. Confira o VITE_PANDASCORE_TOKEN.",
+      403: "A PandaScore recusou o acesso. Confira as permissões do token e o plano contratado.",
+      429: "O limite de requisições da PandaScore foi atingido. Aguarde um pouco e tente novamente.",
+    };
+    throw new Error(
+      mensagens[resposta.status] ||
+        `A PandaScore respondeu com erro ${resposta.status}. Tente novamente mais tarde.`,
+    );
+  }
   return resposta.json();
 }
 
