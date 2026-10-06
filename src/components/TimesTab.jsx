@@ -32,8 +32,8 @@ function TimeCard({ time }) {
   const jogadores = Array.isArray(time.players) ? time.players : []
 
   return (
-    <Card sx={{ height: '100%' }}>
-      <CardContent>
+    <Card sx={{ height: '100%', overflow: 'hidden' }}>
+      <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
         <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
           <Avatar
             src={time.image_url}

@@ -1,7 +1,18 @@
 const BASE_URL = "https://api.pandascore.co/valorant";
 const TOKEN = import.meta.env.VITE_PANDASCORE_TOKEN;
+// Allowlist do plano gratuito (Fixtures): calendários/resultados e times.
+const ENDPOINTS_GRATUITOS = new Set([
+  "/matches/upcoming",
+  "/matches/running",
+  "/matches/past",
+  "/teams",
+]);
 
 async function get(caminho, params = {}) {
+  if (!ENDPOINTS_GRATUITOS.has(caminho)) {
+    throw new Error("Este recurso não está disponível no plano gratuito da PandaScore.");
+  }
+
   if (!TOKEN)
     throw new Error(
       "Token da PandaScore não configurado (veja o arquivo .env.example)",
@@ -22,7 +33,7 @@ async function get(caminho, params = {}) {
   if (!resposta.ok) {
     const mensagens = {
       401: "A PandaScore não aceitou o token configurado. Confira o VITE_PANDASCORE_TOKEN.",
-      403: "A PandaScore recusou o acesso. Confira as permissões do token e o plano contratado.",
+      403: "A PandaScore recusou o acesso. Confira o token e se o recurso pertence ao plano gratuito.",
       429: "O limite de requisições da PandaScore foi atingido. Aguarde um pouco e tente novamente.",
     };
     throw new Error(
@@ -35,6 +46,9 @@ async function get(caminho, params = {}) {
 
 // tipo: 'upcoming' (próximas), 'running' (ao vivo) ou 'past' (resultados)
 export function listarPartidas(tipo = "upcoming", porPagina = 30) {
+  if (!["upcoming", "running", "past"].includes(tipo)) {
+    throw new Error("Tipo de partida inválido.");
+  }
   return get(`/matches/${tipo}`, { per_page: porPagina });
 }
 
