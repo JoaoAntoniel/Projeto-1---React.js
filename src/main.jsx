@@ -1,14 +1,18 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { CssBaseline } from '@mui/material'
+import { CssBaseline, ThemeProvider } from '@mui/material'
 import App from './App.jsx'
 import { FavoritosProvider } from './context/FavoritosContext'
+import theme from './theme'
+import './index.css'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <CssBaseline />
-    <FavoritosProvider>
-      <App />
-    </FavoritosProvider>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <FavoritosProvider>
+        <App />
+      </FavoritosProvider>
+    </ThemeProvider>
   </StrictMode>,
 )

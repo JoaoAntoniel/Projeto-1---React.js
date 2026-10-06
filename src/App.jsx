@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Alert, AppBar, Button, CircularProgress, Container, FormControlLabel, Grid, Stack, Switch, Tab, Tabs, Toolbar, Typography } from '@mui/material'
+import { Alert, AppBar, Box, Button, CircularProgress, Container, FormControlLabel, Grid, Stack, Switch, Tab, Tabs, Toolbar, Typography } from '@mui/material'
 import Filtros from './components/Filtros'
 import PartidaCard from './components/PartidaCard'
 import TimesTab from './components/TimesTab'
@@ -61,9 +61,15 @@ export default function App() {
 
   return (
     <>
-      <AppBar position="sticky" sx={{ bgcolor: '#ff4655' }}>
-        <Toolbar>
-          <Typography variant="h6" sx={{ fontWeight: 700 }}>Valorant Esports</Typography>
+      <AppBar position="sticky" className="site-header">
+        <Toolbar sx={{ minHeight: 64 }}>
+          <Box className="brand-mark" aria-hidden="true" />
+          <Box>
+            <Typography variant="h6" sx={{ color: '#fff', lineHeight: 1.15 }}>Valorant Esports</Typography>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,.62)', letterSpacing: '.08em' }}>
+              CENTRAL COMPETITIVA
+            </Typography>
+          </Box>
         </Toolbar>
         <Tabs value={aba} onChange={(_, v) => setAba(v)} textColor="inherit" indicatorColor="secondary" centered>
           <Tab value="partidas" label="Partidas" />
@@ -78,7 +84,18 @@ export default function App() {
         )}
       </AppBar>
 
-      <Container sx={{ py: 3 }}>
+      <Container className="page-shell">
+        <Box className="page-intro">
+          <Typography className="page-eyebrow">VALORANT · CENÁRIO COMPETITIVO</Typography>
+          <Typography variant="h4" component="h1">
+            {aba === 'times' ? 'Times' : 'Partidas'}
+          </Typography>
+          <Typography color="text.secondary" sx={{ mt: 0.75 }}>
+            {aba === 'times'
+              ? 'Explore organizações e seus elencos.'
+              : 'Acompanhe a agenda, os confrontos ao vivo e os resultados.'}
+          </Typography>
+        </Box>
         {aba === 'times' ? <TimesTab /> : (
           <>
             {carregando ? (

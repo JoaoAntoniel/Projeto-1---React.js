@@ -1,0 +1,100 @@
+:root {
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(ellipse at 90% 0%, rgba(232, 61, 80, 0.075), transparent 34rem),
+    #f3f5f9;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.site-header {
+  box-shadow: 0 8px 24px rgba(13, 23, 39, 0.17) !important;
+}
+
+.brand-mark {
+  display: inline-block;
+  width: 9px;
+  height: 30px;
+  margin-right: 12px;
+  border-radius: 8px;
+  background: #e83d50;
+  box-shadow: 0 0 18px rgba(232, 61, 80, 0.65);
+}
+
+.site-header .MuiTabs-indicator {
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: #ff6676;
+}
+
+.site-header .MuiTab-root {
+  min-height: 48px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 650;
+}
+
+.site-header .MuiTab-root.Mui-selected {
+  color: #fff;
+}
+
+.page-shell {
+  max-width: 1280px !important;
+  min-height: calc(100vh - 170px);
+  padding-top: 34px;
+  padding-bottom: 64px;
+}
+
+.page-intro {
+  margin-bottom: 26px;
+}
+
+.page-eyebrow {
+  display: block;
+  margin-bottom: 5px;
+  color: #e83d50;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.MuiCard-root:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 34px rgba(26, 39, 61, 0.11);
+}
+
+.MuiDialog-paper {
+  border: 1px solid #e6eaf1;
+  box-shadow: 0 24px 80px rgba(13, 23, 39, 0.2) !important;
+}
+
+@media (max-width: 600px) {
+  .page-shell {
+    padding-top: 24px;
+    padding-bottom: 42px;
+  }
+
+  .brand-mark {
+    height: 25px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
